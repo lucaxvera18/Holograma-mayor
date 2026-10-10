@@ -2,29 +2,36 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Holograma Procedural - 17 de Octubre</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Holograma Procedural 100% AR</title>
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
-        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; }
-        a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
-        #ui-overlay { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; width: 90%; max-width: 400px; text-align: center; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; font-family: 'Segoe UI', sans-serif; }
+        /* Fondo negro por defecto, se vuelve transparente al iniciar la cámara */
+        #bg-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: -2; transition: opacity 0.5s; }
+        /* Video de la cámara forzado a funcionar en iOS */
+        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; transform: scaleX(-1); /* Efecto espejo si se usa frontal, pero pediremos trasera */ }
+        /* La escena AR encima de todo */
+        a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
+        
+        #ui-overlay { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; width: 90%; max-width: 400px; text-align: center; }
         .hud-card { background: rgba(0, 0, 0, 0.85); border: 2px solid #ffcc00; border-radius: 15px; padding: 12px 20px; color: #fff; box-shadow: 0 0 20px rgba(255, 204, 0, 0.5); backdrop-filter: blur(5px); }
         h1 { margin: 0 0 5px 0; font-size: 0.95rem; color: #ffcc00; text-transform: uppercase; letter-spacing: 1px; }
-        #timer { font-size: 1.5rem; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.7); }
-        .party-banner { background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc); color: #000; font-weight: 900; font-size: 1.1rem; padding: 12px 20px; border-radius: 30px; display: none; }
+        #timer { font-size: 1.6rem; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.7); font-variant-numeric: tabular-nums; }
+        .party-banner { background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc); color: #000; font-weight: 900; font-size: 1.1rem; padding: 15px 20px; border-radius: 30px; display: none; text-transform: uppercase; box-shadow: 0 0 30px rgba(255, 204, 0, 1); animation: latido 1s infinite alternate;}
+        
+        @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
+        
+        #start-btn { display: inline-block; margin-top: 10px; padding: 10px 20px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;}
     </style>
 
     <script>
-        // MOTOR DE ANIMACIÓN MATEMÁTICA (RIGGING PROCEDURAL)
-        // Simula huesos, gravedad y el baile "Victory Royale" mediante trigonometría
+        // MOTOR MATEMÁTICO DEL BAILE (Victory Royale)
         AFRAME.registerComponent('procedural-dancer', {
             schema: { speed: { type: 'number', default: 5.0 }, isPartyMode: { type: 'boolean', default: false } },
             tick: function (time) {
                 const t = time * 0.001 * this.data.speed;
-                
-                // Elementos del esqueleto
                 const pelvis = document.getElementById('pelvis');
                 const torso = document.getElementById('torso');
                 const piernaIzq = document.getElementById('muslo-izq');
@@ -37,46 +44,34 @@
 
                 if (!pelvis || !torso) return;
 
-                // 1. Dinámica de Pelvis y Caderas (Rebote y Twist)
-                // El rebote es el valor absoluto del seno para simular los pasos
                 const rebote = Math.abs(Math.sin(t * 2)) * 0.15;
                 pelvis.object3D.position.y = 1.8 + rebote;
-                pelvis.object3D.rotation.y = Math.sin(t) * 0.4; // Twist de caderas
-                pelvis.object3D.rotation.z = Math.cos(t * 2) * 0.05; // Balanceo lateral
+                pelvis.object3D.rotation.y = Math.sin(t) * 0.4; 
+                pelvis.object3D.rotation.z = Math.cos(t * 2) * 0.05;
 
-                // 2. Contrapeso del Torso (Swag)
-                torso.object3D.rotation.y = -Math.sin(t) * 0.2; // Torso gira opuesto a caderas
-                torso.object3D.rotation.z = Math.sin(t) * 0.1; // Inclinación canchera
+                torso.object3D.rotation.y = -Math.sin(t) * 0.2; 
+                torso.object3D.rotation.z = Math.sin(t) * 0.1; 
                 torso.object3D.rotation.x = Math.sin(t * 2) * 0.05;
 
-                // 3. Juego de Pies (Pasos alternados estilo Victory Dance)
                 const pasoIzq = Math.sin(t);
                 const pasoDer = Math.sin(t + Math.PI);
 
-                // Pierna Izquierda
                 if (pasoIzq > 0) {
-                    piernaIzq.object3D.rotation.x = -pasoIzq * 0.6; // Levanta fémur
-                    rodillaIzq.object3D.rotation.x = pasoIzq * 0.8;  // Flexiona rodilla
+                    piernaIzq.object3D.rotation.x = -pasoIzq * 0.6; 
+                    rodillaIzq.object3D.rotation.x = pasoIzq * 0.8;  
                     piernaIzq.object3D.position.y = pasoIzq * 0.1;
                 } else {
-                    piernaIzq.object3D.rotation.x = 0;
-                    rodillaIzq.object3D.rotation.x = 0;
-                    piernaIzq.object3D.position.y = 0;
+                    piernaIzq.object3D.rotation.x = 0; rodillaIzq.object3D.rotation.x = 0; piernaIzq.object3D.position.y = 0;
                 }
 
-                // Pierna Derecha
                 if (pasoDer > 0) {
                     piernaDer.object3D.rotation.x = -pasoDer * 0.6;
                     rodillaDer.object3D.rotation.x = pasoDer * 0.8;
                     piernaDer.object3D.position.y = pasoDer * 0.1;
                 } else {
-                    piernaDer.object3D.rotation.x = 0;
-                    rodillaDer.object3D.rotation.x = 0;
-                    piernaDer.object3D.position.y = 0;
+                    piernaDer.object3D.rotation.x = 0; rodillaDer.object3D.rotation.x = 0; piernaDer.object3D.position.y = 0;
                 }
 
-                // 4. Brazos sostenido el cartel dinámico
-                // Los hombros hacen el movimiento de bomba de arriba hacia abajo
                 const brazoBomba = Math.sin(t * 2) * 0.3;
                 hombroIzq.object3D.rotation.z = -1.2 + brazoBomba;
                 hombroIzq.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
@@ -84,13 +79,10 @@
                 hombroDer.object3D.rotation.z = 1.2 - brazoBomba;
                 hombroDer.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
 
-                // El cartel acompaña las manos
                 if (this.data.isPartyMode) {
-                    // Modo Bizarro 17 Oct: El cartel gira descontrolado
                     cartel.object3D.rotation.z += 0.05;
                     cartel.object3D.rotation.y += 0.05;
                 } else {
-                    // Modo normal: Mueve el cartel al ritmo del baile
                     cartel.object3D.position.y = 1.2 + brazoBomba * 0.5;
                     cartel.object3D.rotation.z = Math.cos(t) * 0.1;
                     cartel.object3D.rotation.y = Math.sin(t) * 0.2;
@@ -101,44 +93,43 @@
 </head>
 <body>
 
+    <div id="bg-container"></div>
     <video id="webcam-video" autoplay playsinline muted></video>
 
     <div id="ui-overlay">
         <div class="hud-card" id="card-container">
             <h1>⏳ Cuenta Regresiva: 17 de Octubre</h1>
             <div id="timer">Calculando...</div>
+            <button id="start-btn" onclick="iniciarExperienciaAR()">INICIAR CÁMARA AR</button>
         </div>
         <div class="party-banner" id="party-banner">
             🎉 ¡17 DE OCTUBRE! ¡FIESTA Y DESCONTROL! 🎂
         </div>
     </div>
 
-    <!-- Escena AR con renderizado físico optimizado -->
-    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true; physicallyCorrectLights: true; colorManagement: true;">
+    <!-- Escena AR optimizada. transparent: true es vital para la cámara -->
+    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true; clearColor: transparent; physicallyCorrectLights: true; colorManagement: true;">
         
-        <a-camera position="0 1.5 0" look-controls="enabled: false"></a-camera>
+        <!-- CÁMARA CON GIROSCOPIO: Permite acercarse y alejarse dinámicamente -->
+        <a-camera position="0 1.6 0" look-controls="enabled: true; magicWindowTrackingEnabled: true;"></a-camera>
         
-        <!-- Iluminación Premium -->
         <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
         <a-light type="directional" position="2 4 3" color="#fff" intensity="2" castShadow="true"></a-light>
         <a-light type="point" position="-2 2 -2" color="#ffcc00" intensity="1"></a-light>
 
-        <!-- ANCLAJE EN EL ESPACIO AR -->
-        <a-entity position="0 -0.5 -4.5">
+        <!-- ANCLAJE EN EL ESPACIO (Fijo a Z -5 metros) -->
+        <!-- Al usar look-controls, el usuario puede girar y ver el holograma fijo en este punto -->
+        <a-entity position="0 -0.5 -5" id="holograma-ancla">
 
-            <!-- CONTROLADOR PROCEDURAL PRINCIPAL -->
+            <!-- RIG MAESTRO DE ANIMACIÓN -->
             <a-entity id="rig-maestro" procedural-dancer="speed: 5.0">
                 
-                <!-- PELVIS (Punto de gravedad) -->
                 <a-entity id="pelvis">
-                    
-                    <!-- PIERNAS ARTICULADAS (Hijos de la pelvis) -->
-                    <!-- Izquierda -->
+                    <!-- Piernas -->
                     <a-entity id="muslo-izq" position="-0.4 -0.2 0">
                         <a-cylinder radius="0.05" height="0.6" color="#111" position="0 -0.3 0"></a-cylinder>
                         <a-entity id="pantorrilla-izq" position="0 -0.6 0">
                             <a-cylinder radius="0.04" height="0.7" color="#111" position="0 -0.35 0"></a-cylinder>
-                            <!-- Zapatilla Alta Premium -->
                             <a-entity position="0 -0.75 0.15">
                                 <a-box width="0.22" height="0.18" depth="0.4" color="#e63946" material="roughness: 0.8"></a-box>
                                 <a-box width="0.24" height="0.06" depth="0.42" color="#ffffff" position="0 -0.12 0"></a-box>
@@ -147,7 +138,6 @@
                         </a-entity>
                     </a-entity>
 
-                    <!-- Derecha -->
                     <a-entity id="muslo-der" position="0.4 -0.2 0">
                         <a-cylinder radius="0.05" height="0.6" color="#111" position="0 -0.3 0"></a-cylinder>
                         <a-entity id="pantorrilla-der" position="0 -0.6 0">
@@ -160,55 +150,46 @@
                         </a-entity>
                     </a-entity>
 
-                    <!-- TORSO (La Pizza) -->
+                    <!-- Torso -->
                     <a-entity id="torso" position="0 0.5 0">
-                        <!-- Queso y Masa -->
-                        <a-cone radius-bottom="1.6" radius-top="0" height="3" color="#ffcc00" rotation="0 0 180" scale="1 1 0.2" material="roughness: 0.5; metalness: 0.1;"></a-cone>
+                        <a-cone radius-bottom="1.6" radius-top="0" height="3" color="#ffcc00" rotation="0 0 180" scale="1 1 0.2" material="roughness: 0.5;"></a-cone>
                         <a-cylinder radius="1.65" height="0.45" color="#d68c45" position="0 1.5 0" scale="1 1 0.25" material="roughness: 0.9;"></a-cylinder>
 
-                        <!-- Pepperonis 3D -->
                         <a-cylinder radius="0.25" height="0.08" color="#cc0000" position="0 0.6 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
                         <a-cylinder radius="0.2" height="0.08" color="#cc0000" position="-0.5 1.0 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
                         <a-cylinder radius="0.22" height="0.08" color="#cc0000" position="0.4 1.2 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
                         <a-cylinder radius="0.18" height="0.08" color="#cc0000" position="0 -0.5 0.18" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
 
-                        <!-- Lentes de Sol Sobradores -->
                         <a-entity position="0 0.8 0.3">
-                            <a-cylinder radius="0.35" height="0.15" color="#050505" position="-0.4 0 0" rotation="90 0 0" material="metalness: 0.8; roughness: 0.1"></a-cylinder>
-                            <a-cylinder radius="0.35" height="0.15" color="#050505" position="0.4 0 0" rotation="90 0 0" material="metalness: 0.8; roughness: 0.1"></a-cylinder>
+                            <a-cylinder radius="0.35" height="0.15" color="#050505" position="-0.4 0 0" rotation="90 0 0"></a-cylinder>
+                            <a-cylinder radius="0.35" height="0.15" color="#050505" position="0.4 0 0" rotation="90 0 0"></a-cylinder>
                             <a-box width="0.6" height="0.08" depth="0.1" color="#050505"></a-box>
-                            <!-- Reflejo curvo blanco simulado -->
                             <a-plane width="0.15" height="0.25" color="#ffffff" position="-0.5 0.1 0.08" rotation="0 0 45" material="opacity: 0.6"></a-plane>
                             <a-plane width="0.15" height="0.25" color="#ffffff" position="0.3 0.1 0.08" rotation="0 0 45" material="opacity: 0.6"></a-plane>
                         </a-entity>
 
                         <a-torus arc="140" radius="0.18" radius-tubular="0.03" color="#000" rotation="0 0 45" position="0 0.3 0.3"></a-torus>
 
-                        <!-- BRAZOS ARTICULADOS -->
                         <a-entity id="hombro-izq" position="-1.2 0.8 0">
                             <a-cylinder radius="0.04" height="0.8" color="#111" position="-0.3 -0.2 0.3" rotation="20 0 40"></a-cylinder>
-                            <a-sphere radius="0.12" color="#ffffff" position="-0.6 -0.4 0.6"></a-sphere> <!-- Guante Izq -->
+                            <a-sphere radius="0.12" color="#ffffff" position="-0.6 -0.4 0.6"></a-sphere> 
                         </a-entity>
-
                         <a-entity id="hombro-der" position="1.2 0.8 0">
                             <a-cylinder radius="0.04" height="0.8" color="#111" position="0.3 -0.2 0.3" rotation="20 0 -40"></a-cylinder>
-                            <a-sphere radius="0.12" color="#ffffff" position="0.6 -0.4 0.6"></a-sphere> <!-- Guante Der -->
+                            <a-sphere radius="0.12" color="#ffffff" position="0.6 -0.4 0.6"></a-sphere> 
                         </a-entity>
+                    </a-entity> 
+                </a-entity> 
 
-                    </a-entity> <!-- Fin Torso -->
-
-                </a-entity> <!-- Fin Pelvis -->
-
-                <!-- CARTEL CONTROLADO POR EL SCRIPT MATEMÁTICO -->
                 <a-entity id="cartel-dinamico" position="0 1.2 1.2">
                     <a-box width="2.8" height="0.7" depth="0.06" color="#000000"></a-box>
                     <a-box width="2.7" height="0.6" depth="0.08" color="#ffcc00"></a-box>
                     <a-text value="17 DE OCTUBRE" color="#000" align="center" width="7" position="0 0 0.05" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
                 </a-entity>
 
-            </a-entity> <!-- Fin Rig Maestro -->
+            </a-entity> 
 
-            <!-- ELEMENTOS DE FIESTA -->
+            <!-- Torta y Fuegos Bizarros -->
             <a-entity id="party-elements" visible="false">
                 <a-entity position="-2.5 1.5 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear">
                     <a-cylinder radius="0.7" height="0.3" color="#ff66b2"></a-cylinder>
@@ -217,7 +198,6 @@
                         <a-sphere radius="0.1" color="#ff3300" position="0 0.25 0" animation="property: scale; to: 1.6 1.6 1.6; dir: alternate; dur: 100; loop: true"></a-sphere>
                     </a-cylinder>
                 </a-entity>
-                <!-- Partículas Bizarra -->
                 <a-sphere radius="0.15" color="#ff0055" position="-2 4 0" animation="property: position; to: -2 7 0; dir: alternate; dur: 500; loop: true"></a-sphere>
                 <a-sphere radius="0.15" color="#00ffcc" position="2 3.5 0" animation="property: position; to: 2 6.5 0; dir: alternate; dur: 400; loop: true"></a-sphere>
                 <a-sphere radius="0.15" color="#ffcc00" position="0 5 -2" animation="property: position; to: 0 8 -2; dir: alternate; dur: 450; loop: true"></a-sphere>
@@ -227,19 +207,52 @@
     </a-scene>
 
     <script>
-        async function iniciarCamara() {
+        // SOLUCIÓN CÁMARA NEGRA: Se requiere interacción del usuario (botón) en iOS/Android modernos
+        async function iniciarExperienciaAR() {
             try {
                 const videoElement = document.getElementById('webcam-video');
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                // Intentar forzar la cámara trasera en todos los dispositivos
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: "environment" } }, 
+                    audio: false 
+                });
                 videoElement.srcObject = stream;
-            } catch (error) { console.error("Error al iniciar cámara:", error); }
+                
+                // Ocultar el fondo negro y el botón
+                document.getElementById('bg-container').style.opacity = '0';
+                setTimeout(() => document.getElementById('bg-container').style.display = 'none', 500);
+                document.getElementById('start-btn').style.display = 'none';
+
+                // Acomodar el holograma justo frente a donde mira la cámara al iniciar
+                const camara = document.querySelector('a-camera').object3D;
+                const ancla = document.getElementById('holograma-ancla');
+                
+                // Calcular la rotación del celular para poner el holograma enfrente
+                const rotY = camara.rotation.y;
+                const distZ = -5; // Distancia en metros
+                const distX = 0;
+                
+                // Aplicar trigonometría básica para colocarlo a 5 metros frente a la vista inicial
+                ancla.position.set(
+                    camara.position.x + distX * Math.cos(rotY) + distZ * Math.sin(rotY),
+                    -0.5,
+                    camara.position.z - distZ * Math.cos(rotY) + distX * Math.sin(rotY)
+                );
+
+            } catch (error) { 
+                console.error("Error cámara:", error);
+                alert("Para ver el holograma, permite el acceso a la cámara y recarga la página.");
+            }
         }
 
-        function actualizarSistema() {
+        // SOLUCIÓN CONTADOR CONGELADO: Cálculo basado en milisegundos universales
+        function actualizarTemporizador() {
             const ahora = new Date();
+            // Fijar el objetivo: 17 de Octubre del año actual (Mes 9 en JavaScript porque empieza en 0)
             const anioActual = ahora.getFullYear();
             let objetivo = new Date(anioActual, 9, 17, 0, 0, 0); 
 
+            // Si hoy ya pasó el 17 de octubre a la noche, apuntar al año que viene
             if (ahora > new Date(anioActual, 9, 17, 23, 59, 59)) {
                 objetivo = new Date(anioActual + 1, 9, 17, 0, 0, 0);
             }
@@ -247,12 +260,33 @@
             const esElGranDia = ahora.getDate() === 17 && ahora.getMonth() === 9;
 
             if (esElGranDia) {
-                document.getElementById('card-container').style.display = 'none';
+                document.getElementById('timer').style.display = 'none';
                 document.getElementById('party-banner').style.display = 'block';
                 document.getElementById('party-elements').setAttribute('visible', 'true');
-                
-                // Activar físicas extremas en el script procedural
                 document.getElementById('rig-maestro').setAttribute('procedural-dancer', 'speed: 9.0; isPartyMode: true');
+                document.querySelector('.hud-card h1').innerText = "¡ESTALLÓ LA FIESTA!";
             } else {
-                const diferencia = objetivo - ahora;
-                const dias
+                const milisegundosRestantes = objetivo.getTime() - ahora.getTime();
+                
+                const dias = Math.floor(milisegundosRestantes / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((milisegundosRestantes % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutos = Math.floor((milisegundosRestantes % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((milisegundosRestantes % (1000 * 60)) / 1000);
+                
+                // Formatear con ceros a la izquierda para que no baile el texto
+                const hF = horas.toString().padStart(2, '0');
+                const mF = minutos.toString().padStart(2, '0');
+                const sF = segundos.toString().padStart(2, '0');
+
+                document.getElementById('timer').innerText = `${dias}d ${hF}h ${mF}m ${sF}s`;
+            }
+        }
+
+        // Arrancar el reloj independientemente de la cámara
+        window.addEventListener('load', () => {
+            actualizarTemporizador(); // Ejecutar inmediato
+            setInterval(actualizarTemporizador, 1000); // Repetir cada segundo
+        });
+    </script>
+</body>
+</html>
