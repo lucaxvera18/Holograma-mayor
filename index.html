@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Holograma Cuenta Regresiva - 17 de Octubre</title>
+    <!-- A-Frame y MindAR para Realidad Aumentada Web -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-three.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .hud-card {
+            background: rgba(0, 0, 0, 0.75);
+            border: 2px solid #00ffcc;
+            border-radius: 15px;
+            padding: 15px 25px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            margin-top: 10px;
+        }
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.2rem;
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #timer {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff0055;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.7);
+        }
+        .party-banner {
+            background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc);
+            background-size: 200% 200%;
+            animation: gradientBG 3s ease infinite;
+            color: #000;
+            font-weight: 900;
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+            text-transform: uppercase;
+            text-align: center;
+            display: none;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        #instructions {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            pointer-events: auto;
+            border: 1px solid #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Interfaz de Usuario (HUD sobre la cámara) -->
+    <div id="ui-overlay">
+        <div class="hud-card" id="card-container">
+            <h1 id="title-text">⏳ Faltan para el 17 de Octubre</h1>
+            <div id="timer">Calculando...</div>
+        </div>
+
+        <div class="party-banner" id="party-banner">
+            🎉 ¡LLEGÓ EL 17 DE OCTUBRE! ¡FIESTA BIZARRA! 🎂
+        </div>
+
+        <div id="instructions">
+            📱 Apuntá con la cámara y sumergite en la experiencia AR
+        </div>
+    </div>
+
+    <!-- Escena de A-Frame / AR -->
+    <a-scene embedded vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;">
+        
+        <a-assets>
+            <!-- Texturas o recursos adicionales si se requieren -->
+        </a-assets>
+
+        <a-camera position="0 0 3" look-controls="enabled: false"></a-camera>
+
+        <!-- Luz ambiental y direccional -->
+        <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+        <a-light type="directional" position="2 4 2" intensity="1.5"></a-light>
+
+        <!-- CONTENEDOR DEL PERSONAJE Y ESCENOGRAFÍA -->
+        <a-entity id="holo-entity" position="0 -0.5 -2">
+
+            <!-- PERSONAJE AMIGABLE BIZARRO (Construido con primitivas 3D para máxima compatibilidad) -->
+            <a-entity id="character" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear">
+                
+                <!-- Cuerpo (Cápsula bizarra) -->
+                <a-capsule radius="0.3" height="0.9" color="#00ffcc" position="0 0.45 0" roughness="0.3" metalness="0.5">
+                    <!-- Ojitos bizatros -->
+                    <a-sphere radius="0.08" color="#ff0055" position="-0.12 0.3 0.25"></a-sphere>
+                    <a-sphere radius="0.08" color="#ff0055" position="0.12 0.3 0.25"></a-sphere>
+                    <a-sphere radius="0.03" color="#000" position="-0.12 0.3 0.32"></a-sphere>
+                    <a-sphere radius="0.03" color="#000" position="0.12 0.3 0.32"></a-sphere>
+                    <!-- Sonrisa -->
+                    <a-torus arc="180" radius="0.1" radius-tubular="0.015" color="#fff" rotation="0 0 180" position="0 0.15 0.27"></a-torus>
+                </a-capsule>
+
+                <!-- Sombrero / Gorrito fiestero -->
+                <a-cone radius-bottom="0.35" height="0.5" color="#ff0055" position="0 1.1 0">
+                    <a-sphere radius="0.08" color="#ffcc00" position="0 0.3 0"></a-sphere>
+                </a-cone>
+
+                <!-- Brazos animados con rotación loca -->
+                <a-box width="0.15" height="0.5" depth="0.15" color="#ffcc00" position="-0.4 0.5 0" 
+                       animation="property: rotation; to: 45 0 0; dir: alternate; dur: 400; loop: true"></a-box>
+                <a-box width="0.15" height="0.5" depth="0.15" color="#ffcc00" position="0.4 0.5 0" 
+                       animation="property: rotation; to: -45 0 0; dir: alternate; dur: 400; loop: true"></a-box>
+
+            </a-entity>
+
+            <!-- ELEMENTO DE TORTA (Aparece o destaca el 17) -->
+            <a-entity id="torta-container" position="0 -0.4 0.5" scale="1 1 1">
+                <!-- Base de la torta -->
+                <a-cylinder radius="0.4" height="0.25" color="#ff66b2" position="0 0.125 0"></a-cylinder>
+                <a-cylinder radius="0.42" height="0.1" color="#ffffff" position="0 0.22 0"></a-cylinder>
+                <!-- Vela coqueta -->
+                <a-cylinder radius="0.04" height="0.3" color="#ffff00" position="0 0.4 0">
+                    <!-- Fuego de la vela -->
+                    <a-sphere radius="0.06" color="#ff3300" position="0 0.2 0" 
+                              animation="property: scale; to: 1.3 1.3 1.3; dir: alternate; dur: 300; loop: true">
+                    </a-sphere>
+                </a-cylinder>
+            </a-entity>
+
+            <!-- FUEGOS ARTIFICIALES SIMULADOS (Partículas bizarras en modo fiesta) -->
+            <a-entity id="fuegos" visible="false">
+                <a-sphere radius="0.05" color="#ff0055" position="-0.8 1.2 -0.5" animation="property: position; to: -0.8 2.2 -0.5; dir: alternate; dur: 800; loop: true"></a-sphere>
+                <a-sphere radius="0.05" color="#00ffcc" position="0.9 1.5 -0.5" animation="property: position; to: 0.9 2.5 -0.5; dir: alternate; dur: 600; loop: true"></a-sphere>
+                <a-sphere radius="0.05" color="#ffcc00" position="0 1.8 -0.8" animation="property: position; to: 0 2.8 -0.8; dir: alternate; dur: 700; loop: true"></a-sphere>
+            </a-entity>
+
+        </a-entity>
+
+    </a-scene>
+
+    <!-- Script de lógica de fechas y efectos -->
+    <script>
+        function actualizarSistema() {
+            const ahora = new Date();
+            const anioActual = ahora.getFullYear();
+            
+            // Fecha objetivo: 17 de Octubre a las 00:00 hs
+            let objetivo = new Date(anioActual, 9, 17, 0, 0, 0); // Mes 9 es octubre
+
+            // Si ya pasó el 17 de octubre de este año, apuntamos al año que viene
+            if (ahora > new Date(anioActual, 9, 17, 23, 59, 59)) {
+                objetivo = new Date(anioActual + 1, 9, 17, 0, 0, 0);
+            }
+
+            const esElGranDia = ahora.getDate() === 17 && ahora.getMonth() === 9;
+
+            if (esElGranDia) {
+                // MODO FIESTA BIZARRA ACTIVADO
+                document.getElementById('card-container').style.display = 'none';
+                document.getElementById('party-banner').style.display = 'block';
+                document.getElementById('fuegos').setAttribute('visible', 'true');
+
+                // Hacer que el personaje baile más rápido y loco
+                const char = document.getElementById('character');
+                char.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear');
+            } else {
+                // MODO CUENTA REGRESIVA
+                const diferencia = objetivo - ahora;
+
+                const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+                const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+                document.getElementById('timer').innerText = 
+                    `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+            }
+        }
+
+        // Actualizar cada segundo
+        setInterval(actualizarSistema, 1000);
+        actualizarSistema();
+    </script>
+</body>
+</html>
