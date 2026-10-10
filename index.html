@@ -3,26 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Holograma Pizza - 17 de Octubre</title>
+    <title>Holograma AR - 17 de Octubre</title>
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; font-family: 'Segoe UI', sans-serif; }
-        #bg-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: -2; transition: opacity 0.5s; }
-        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; transform: scaleX(-1); }
-        a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 1; transform: scaleX(-1); }
         
-        #ui-overlay { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; width: 90%; max-width: 400px; text-align: center; }
-        .hud-card { background: rgba(0, 0, 0, 0.85); border: 2px solid #ffcc00; border-radius: 15px; padding: 12px 20px; color: #fff; box-shadow: 0 0 20px rgba(255, 204, 0, 0.5); backdrop-filter: blur(5px); }
+        /* A-scene ahora sí permite clics y está por encima de la cámara */
+        a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
+        
+        #ui-overlay { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; width: 90%; max-width: 400px; text-align: center; pointer-events: none; }
+        .hud-card { background: rgba(0, 0, 0, 0.85); border: 2px solid #ffcc00; border-radius: 15px; padding: 12px 20px; color: #fff; box-shadow: 0 0 20px rgba(255, 204, 0, 0.5); backdrop-filter: blur(5px); pointer-events: auto; }
         h1 { margin: 0 0 5px 0; font-size: 0.95rem; color: #ffcc00; text-transform: uppercase; letter-spacing: 1px; }
         #timer { font-size: 1.6rem; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.7); font-variant-numeric: tabular-nums; }
-        .party-banner { background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc); color: #000; font-weight: 900; font-size: 1.1rem; padding: 15px 20px; border-radius: 30px; display: none; text-transform: uppercase; box-shadow: 0 0 30px rgba(255, 204, 0, 1); animation: latido 1s infinite alternate;}
         
+        #start-btn { display: inline-block; margin-top: 15px; padding: 12px 24px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; pointer-events: auto; box-shadow: 0 0 15px rgba(0, 255, 204, 0.6); }
+        
+        .party-banner { background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc); color: #000; font-weight: 900; font-size: 1.1rem; padding: 15px 20px; border-radius: 30px; display: none; text-transform: uppercase; box-shadow: 0 0 30px rgba(255, 204, 0, 1); animation: latido 1s infinite alternate;}
         @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
+        
+        /* Pantalla de carga/permisos negra que se oculta al iniciar */
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.5s; }
     </style>
 
     <script>
-        // MOTOR MATEMÁTICO DEL BAILE (Victory Royale)
         AFRAME.registerComponent('procedural-dancer', {
             schema: { speed: { type: 'number', default: 5.0 }, isPartyMode: { type: 'boolean', default: false } },
             tick: function (time) {
@@ -52,35 +57,25 @@
                 const pasoDer = Math.sin(t + Math.PI);
 
                 if (pasoIzq > 0) {
-                    piernaIzq.object3D.rotation.x = -pasoIzq * 0.6; 
-                    rodillaIzq.object3D.rotation.x = pasoIzq * 0.8;  
-                    piernaIzq.object3D.position.y = pasoIzq * 0.1;
+                    piernaIzq.object3D.rotation.x = -pasoIzq * 0.6; rodillaIzq.object3D.rotation.x = pasoIzq * 0.8; piernaIzq.object3D.position.y = pasoIzq * 0.1;
                 } else {
                     piernaIzq.object3D.rotation.x = 0; rodillaIzq.object3D.rotation.x = 0; piernaIzq.object3D.position.y = 0;
                 }
 
                 if (pasoDer > 0) {
-                    piernaDer.object3D.rotation.x = -pasoDer * 0.6;
-                    rodillaDer.object3D.rotation.x = pasoDer * 0.8;
-                    piernaDer.object3D.position.y = pasoDer * 0.1;
+                    piernaDer.object3D.rotation.x = -pasoDer * 0.6; rodillaDer.object3D.rotation.x = pasoDer * 0.8; piernaDer.object3D.position.y = pasoDer * 0.1;
                 } else {
                     piernaDer.object3D.rotation.x = 0; rodillaDer.object3D.rotation.x = 0; piernaDer.object3D.position.y = 0;
                 }
 
                 const brazoBomba = Math.sin(t * 2) * 0.3;
-                hombroIzq.object3D.rotation.z = -1.2 + brazoBomba;
-                hombroIzq.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
-                
-                hombroDer.object3D.rotation.z = 1.2 - brazoBomba;
-                hombroDer.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
+                hombroIzq.object3D.rotation.z = -1.2 + brazoBomba; hombroIzq.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
+                hombroDer.object3D.rotation.z = 1.2 - brazoBomba; hombroDer.object3D.rotation.x = -0.5 + Math.cos(t)*0.2;
 
                 if (this.data.isPartyMode) {
-                    cartel.object3D.rotation.z += 0.05;
-                    cartel.object3D.rotation.y += 0.05;
+                    cartel.object3D.rotation.z += 0.05; cartel.object3D.rotation.y += 0.05;
                 } else {
-                    cartel.object3D.position.y = 1.2 + brazoBomba * 0.5;
-                    cartel.object3D.rotation.z = Math.cos(t) * 0.1;
-                    cartel.object3D.rotation.y = Math.sin(t) * 0.2;
+                    cartel.object3D.position.y = 1.2 + brazoBomba * 0.5; cartel.object3D.rotation.z = Math.cos(t) * 0.1; cartel.object3D.rotation.y = Math.sin(t) * 0.2;
                 }
             }
         });
@@ -88,8 +83,12 @@
 </head>
 <body>
 
-    <div id="bg-container"></div>
     <video id="webcam-video" autoplay playsinline muted></video>
+
+    <div id="intro-screen">
+        <button id="start-btn" onclick="iniciarSensoresYCamara()">ACTIVAR REALIDAD AUMENTADA</button>
+        <p style="margin-top: 15px; font-size: 0.9rem; color: #aaa; text-align: center; max-width: 80%;">Es necesario otorgar permisos de cámara y movimiento para fijar el holograma en tu espacio.</p>
+    </div>
 
     <div id="ui-overlay">
         <div class="hud-card" id="card-container">
@@ -101,21 +100,22 @@
         </div>
     </div>
 
-    <!-- Escena AR optimizada -->
-    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true; clearColor: transparent; physicallyCorrectLights: true; colorManagement: true;">
+    <!-- device-orientation-permission-ui="enabled: false" elimina el cartel nativo molesto -->
+    <a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="alpha: true; antialias: true; clearColor: transparent;">
         
-        <a-camera position="0 1.6 0" look-controls="enabled: true; magicWindowTrackingEnabled: true;"></a-camera>
+        <!-- look-controls mantiene el entorno atado al giroscopio -->
+        <a-camera id="camara-principal" position="0 1.6 0" look-controls="enabled: true; magicWindowTrackingEnabled: true;"></a-camera>
         
         <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
         <a-light type="directional" position="2 4 3" color="#fff" intensity="2" castShadow="true"></a-light>
-        <a-light type="point" position="-2 2 -2" color="#ffcc00" intensity="1"></a-light>
 
-        <!-- ANCLAJE EN EL ESPACIO (Fijo a Z -5 metros) -->
-        <a-entity position="0 -0.5 -5" id="holograma-ancla">
+        <!-- Contenedor anclado 4 metros adelante -->
+        <a-entity position="0 -0.5 -4" id="holograma-ancla">
 
             <a-entity id="rig-maestro" procedural-dancer="speed: 5.0">
                 
                 <a-entity id="pelvis">
+                    <!-- Piernas -->
                     <a-entity id="muslo-izq" position="-0.4 -0.2 0">
                         <a-cylinder radius="0.05" height="0.6" color="#111" position="0 -0.3 0"></a-cylinder>
                         <a-entity id="pantorrilla-izq" position="0 -0.6 0">
@@ -123,7 +123,6 @@
                             <a-entity position="0 -0.75 0.15">
                                 <a-box width="0.22" height="0.18" depth="0.4" color="#e63946" material="roughness: 0.8"></a-box>
                                 <a-box width="0.24" height="0.06" depth="0.42" color="#ffffff" position="0 -0.12 0"></a-box>
-                                <a-box width="0.22" height="0.1" depth="0.1" color="#ffffff" position="0 0.04 0.16"></a-box>
                             </a-entity>
                         </a-entity>
                     </a-entity>
@@ -135,7 +134,6 @@
                             <a-entity position="0 -0.75 0.15">
                                 <a-box width="0.22" height="0.18" depth="0.4" color="#e63946" material="roughness: 0.8"></a-box>
                                 <a-box width="0.24" height="0.06" depth="0.42" color="#ffffff" position="0 -0.12 0"></a-box>
-                                <a-box width="0.22" height="0.1" depth="0.1" color="#ffffff" position="0 0.04 0.16"></a-box>
                             </a-entity>
                         </a-entity>
                     </a-entity>
@@ -143,48 +141,31 @@
                     <!-- Torso -->
                     <a-entity id="torso" position="0 0.5 0">
                         <a-cone radius-bottom="1.6" radius-top="0" height="3" color="#ffcc00" rotation="0 0 180" scale="1 1 0.2" material="roughness: 0.5;"></a-cone>
-                        <a-cylinder radius="1.65" height="0.45" color="#d68c45" position="0 1.5 0" scale="1 1 0.25" material="roughness: 0.9;"></a-cylinder>
-
-                        <a-cylinder radius="0.25" height="0.08" color="#cc0000" position="0 0.6 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
-                        <a-cylinder radius="0.2" height="0.08" color="#cc0000" position="-0.5 1.0 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
-                        <a-cylinder radius="0.22" height="0.08" color="#cc0000" position="0.4 1.2 0.26" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
-                        <a-cylinder radius="0.18" height="0.08" color="#cc0000" position="0 -0.5 0.18" rotation="90 0 0" material="roughness: 0.3"></a-cylinder>
-
+                        <a-cylinder radius="1.65" height="0.45" color="#d68c45" position="0 1.5 0" scale="1 1 0.25"></a-cylinder>
+                        <a-cylinder radius="0.25" height="0.08" color="#cc0000" position="0 0.6 0.26" rotation="90 0 0"></a-cylinder>
+                        <a-cylinder radius="0.2" height="0.08" color="#cc0000" position="-0.5 1.0 0.26" rotation="90 0 0"></a-cylinder>
+                        
                         <a-entity position="0 0.8 0.3">
                             <a-cylinder radius="0.35" height="0.15" color="#050505" position="-0.4 0 0" rotation="90 0 0"></a-cylinder>
                             <a-cylinder radius="0.35" height="0.15" color="#050505" position="0.4 0 0" rotation="90 0 0"></a-cylinder>
                             <a-box width="0.6" height="0.08" depth="0.1" color="#050505"></a-box>
-                            <a-plane width="0.15" height="0.25" color="#ffffff" position="-0.5 0.1 0.08" rotation="0 0 45" material="opacity: 0.6"></a-plane>
-                            <a-plane width="0.15" height="0.25" color="#ffffff" position="0.3 0.1 0.08" rotation="0 0 45" material="opacity: 0.6"></a-plane>
                         </a-entity>
 
-                        <!-- BOCA ABIERTA CON DIENTES Y LENGUA -->
+                        <!-- BOCA ALEGRE -->
                         <a-entity position="0 0.18 0.31">
-                            <!-- Fondo negro (Mitad inferior de un círculo) -->
                             <a-circle radius="0.22" color="#050505" theta-start="180" theta-length="180" position="0 0 0"></a-circle>
-                            
-                            <!-- Dientes superiores (Tira blanca) -->
                             <a-plane width="0.38" height="0.1" color="#ffffff" position="0 -0.05 0.01"></a-plane>
-                            
-                            <!-- Líneas de separación de los dientes (Simula los dientes individuales) -->
                             <a-plane width="0.015" height="0.1" color="#bbbbbb" position="-0.1 -0.05 0.015"></a-plane>
                             <a-plane width="0.015" height="0.1" color="#bbbbbb" position="0 -0.05 0.015"></a-plane>
                             <a-plane width="0.015" height="0.1" color="#bbbbbb" position="0.1 -0.05 0.015"></a-plane>
-                            
-                            <!-- Lengüita roja en el fondo -->
                             <a-circle radius="0.12" color="#ff3366" theta-start="180" theta-length="180" position="0 -0.14 0.01" scale="1.2 0.7 1"></a-circle>
-                            
-                            <!-- Borde negro grueso (Labios caricatura) -->
                             <a-torus arc="180" radius="0.22" radius-tubular="0.025" color="#000" rotation="0 0 180" position="0 0 0.02"></a-torus>
-                            <!-- Línea superior recta del labio -->
                             <a-cylinder radius="0.025" height="0.45" color="#000" rotation="0 0 90" position="0 0 0.02"></a-cylinder>
                         </a-entity>
                         
-                        <!-- Cachetes sonrojados para darle el toque feliz -->
                         <a-sphere radius="0.08" color="#ff3366" position="-0.38 0.3 0.3" material="opacity: 0.7"></a-sphere>
                         <a-sphere radius="0.08" color="#ff3366" position="0.38 0.3 0.3" material="opacity: 0.7"></a-sphere>
 
-                        <!-- Brazos -->
                         <a-entity id="hombro-izq" position="-1.2 0.8 0">
                             <a-cylinder radius="0.04" height="0.8" color="#111" position="-0.3 -0.2 0.3" rotation="20 0 40"></a-cylinder>
                             <a-sphere radius="0.12" color="#ffffff" position="-0.6 -0.4 0.6"></a-sphere> 
@@ -201,29 +182,36 @@
                     <a-box width="2.7" height="0.6" depth="0.08" color="#ffcc00"></a-box>
                     <a-text value="17 DE OCTUBRE" color="#000" align="center" width="7" position="0 0 0.05" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
                 </a-entity>
-
             </a-entity> 
 
-            <!-- Elementos de Fiesta Bizarra -->
+            <!-- Elementos Fiesta -->
             <a-entity id="party-elements" visible="false">
                 <a-entity position="-2.5 1.5 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear">
                     <a-cylinder radius="0.7" height="0.3" color="#ff66b2"></a-cylinder>
-                    <a-cylinder radius="0.72" height="0.1" color="#ffffff" position="0 0.15 0"></a-cylinder>
                     <a-cylinder radius="0.06" height="0.4" color="#ffff00" position="0 0.4 0">
                         <a-sphere radius="0.1" color="#ff3300" position="0 0.25 0" animation="property: scale; to: 1.6 1.6 1.6; dir: alternate; dur: 100; loop: true"></a-sphere>
                     </a-cylinder>
                 </a-entity>
-                <a-sphere radius="0.15" color="#ff0055" position="-2 4 0" animation="property: position; to: -2 7 0; dir: alternate; dur: 500; loop: true"></a-sphere>
-                <a-sphere radius="0.15" color="#00ffcc" position="2 3.5 0" animation="property: position; to: 2 6.5 0; dir: alternate; dur: 400; loop: true"></a-sphere>
-                <a-sphere radius="0.15" color="#ffcc00" position="0 5 -2" animation="property: position; to: 0 8 -2; dir: alternate; dur: 450; loop: true"></a-sphere>
             </a-entity>
 
         </a-entity>
     </a-scene>
 
     <script>
-        // Inicio 100% automático de la cámara
-        async function autoIniciarCamara() {
+        async function iniciarSensoresYCamara() {
+            // 1. Pedir permisos de giroscopio en iOS 13+ usando el tap del usuario
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('Sin acceso al giroscopio, el personaje no se fijará en el espacio.');
+                    }
+                } catch (error) {
+                    console.error("Error pidiendo giroscopio:", error);
+                }
+            }
+
+            // 2. Iniciar cámara trasera
             try {
                 const videoElement = document.getElementById('webcam-video');
                 const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -231,28 +219,31 @@
                     audio: false 
                 });
                 videoElement.srcObject = stream;
-                
-                // Desvanecer el fondo negro automáticamente
-                document.getElementById('bg-container').style.opacity = '0';
-                setTimeout(() => document.getElementById('bg-container').style.display = 'none', 500);
-
-                const camara = document.querySelector('a-camera').object3D;
-                const ancla = document.getElementById('holograma-ancla');
-                
-                const rotY = camara.rotation.y;
-                const distZ = -5;
-                const distX = 0;
-                
-                ancla.position.set(
-                    camara.position.x + distX * Math.cos(rotY) + distZ * Math.sin(rotY),
-                    -0.5,
-                    camara.position.z - distZ * Math.cos(rotY) + distX * Math.sin(rotY)
-                );
-
             } catch (error) { 
-                console.error("Permiso denegado o error de cámara:", error);
-                alert("Por favor, aceptá los permisos de la cámara al recargar la página para ver la Realidad Aumentada.");
+                console.error("Error cámara:", error);
+                alert("Por favor, permití el acceso a la cámara para ver la Realidad Aumentada.");
             }
+
+            // 3. Posicionar el holograma frente a la dirección a la que apunta el teléfono en este instante
+            const camaraEl = document.getElementById('camara-principal');
+            const ancla = document.getElementById('holograma-ancla');
+            
+            // Forzar actualización de componentes para agarrar la rotación inicial
+            camaraEl.components['look-controls'].update();
+            const rotY = camaraEl.object3D.rotation.y;
+            
+            const distZ = -4; // Distancia fija de 4 metros al frente
+            
+            ancla.object3D.position.set(
+                camaraEl.object3D.position.x + distZ * Math.sin(rotY),
+                -0.5,
+                camaraEl.object3D.position.z + distZ * Math.cos(rotY)
+            );
+
+            // Ocultar pantalla de intro
+            const intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => intro.style.display = 'none', 500);
         }
 
         function actualizarTemporizador() {
@@ -288,11 +279,9 @@
             }
         }
 
-        // Ejecutar funciones apenas cargue la web sin clics
         window.addEventListener('load', () => {
             actualizarTemporizador(); 
             setInterval(actualizarTemporizador, 1000); 
-            autoIniciarCamara();
         });
     </script>
 </body>
