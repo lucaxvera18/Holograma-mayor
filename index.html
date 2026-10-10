@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Holograma Procedural 100% AR</title>
+    <title>Holograma Pizza - 17 de Octubre</title>
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: transparent; font-family: 'Segoe UI', sans-serif; }
-        /* Fondo negro por defecto, se vuelve transparente al iniciar la cámara */
         #bg-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: -2; transition: opacity 0.5s; }
-        /* Video de la cámara forzado a funcionar en iOS */
-        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; transform: scaleX(-1); /* Efecto espejo si se usa frontal, pero pediremos trasera */ }
-        /* La escena AR encima de todo */
+        #webcam-video { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; transform: scaleX(-1); }
         a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
         
         #ui-overlay { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; width: 90%; max-width: 400px; text-align: center; }
@@ -22,8 +19,6 @@
         .party-banner { background: linear-gradient(45deg, #ff0055, #ffcc00, #00ffcc); color: #000; font-weight: 900; font-size: 1.1rem; padding: 15px 20px; border-radius: 30px; display: none; text-transform: uppercase; box-shadow: 0 0 30px rgba(255, 204, 0, 1); animation: latido 1s infinite alternate;}
         
         @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
-        
-        #start-btn { display: inline-block; margin-top: 10px; padding: 10px 20px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;}
     </style>
 
     <script>
@@ -100,17 +95,15 @@
         <div class="hud-card" id="card-container">
             <h1>⏳ Cuenta Regresiva: 17 de Octubre</h1>
             <div id="timer">Calculando...</div>
-            <button id="start-btn" onclick="iniciarExperienciaAR()">INICIAR CÁMARA AR</button>
         </div>
         <div class="party-banner" id="party-banner">
             🎉 ¡17 DE OCTUBRE! ¡FIESTA Y DESCONTROL! 🎂
         </div>
     </div>
 
-    <!-- Escena AR optimizada. transparent: true es vital para la cámara -->
+    <!-- Escena AR optimizada -->
     <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true; clearColor: transparent; physicallyCorrectLights: true; colorManagement: true;">
         
-        <!-- CÁMARA CON GIROSCOPIO: Permite acercarse y alejarse dinámicamente -->
         <a-camera position="0 1.6 0" look-controls="enabled: true; magicWindowTrackingEnabled: true;"></a-camera>
         
         <a-light type="ambient" color="#ffffff" intensity="1.2"></a-light>
@@ -118,14 +111,11 @@
         <a-light type="point" position="-2 2 -2" color="#ffcc00" intensity="1"></a-light>
 
         <!-- ANCLAJE EN EL ESPACIO (Fijo a Z -5 metros) -->
-        <!-- Al usar look-controls, el usuario puede girar y ver el holograma fijo en este punto -->
         <a-entity position="0 -0.5 -5" id="holograma-ancla">
 
-            <!-- RIG MAESTRO DE ANIMACIÓN -->
             <a-entity id="rig-maestro" procedural-dancer="speed: 5.0">
                 
                 <a-entity id="pelvis">
-                    <!-- Piernas -->
                     <a-entity id="muslo-izq" position="-0.4 -0.2 0">
                         <a-cylinder radius="0.05" height="0.6" color="#111" position="0 -0.3 0"></a-cylinder>
                         <a-entity id="pantorrilla-izq" position="0 -0.6 0">
@@ -168,8 +158,33 @@
                             <a-plane width="0.15" height="0.25" color="#ffffff" position="0.3 0.1 0.08" rotation="0 0 45" material="opacity: 0.6"></a-plane>
                         </a-entity>
 
-                        <a-torus arc="140" radius="0.18" radius-tubular="0.03" color="#000" rotation="0 0 45" position="0 0.3 0.3"></a-torus>
+                        <!-- BOCA ABIERTA CON DIENTES Y LENGUA -->
+                        <a-entity position="0 0.18 0.31">
+                            <!-- Fondo negro (Mitad inferior de un círculo) -->
+                            <a-circle radius="0.22" color="#050505" theta-start="180" theta-length="180" position="0 0 0"></a-circle>
+                            
+                            <!-- Dientes superiores (Tira blanca) -->
+                            <a-plane width="0.38" height="0.1" color="#ffffff" position="0 -0.05 0.01"></a-plane>
+                            
+                            <!-- Líneas de separación de los dientes (Simula los dientes individuales) -->
+                            <a-plane width="0.015" height="0.1" color="#bbbbbb" position="-0.1 -0.05 0.015"></a-plane>
+                            <a-plane width="0.015" height="0.1" color="#bbbbbb" position="0 -0.05 0.015"></a-plane>
+                            <a-plane width="0.015" height="0.1" color="#bbbbbb" position="0.1 -0.05 0.015"></a-plane>
+                            
+                            <!-- Lengüita roja en el fondo -->
+                            <a-circle radius="0.12" color="#ff3366" theta-start="180" theta-length="180" position="0 -0.14 0.01" scale="1.2 0.7 1"></a-circle>
+                            
+                            <!-- Borde negro grueso (Labios caricatura) -->
+                            <a-torus arc="180" radius="0.22" radius-tubular="0.025" color="#000" rotation="0 0 180" position="0 0 0.02"></a-torus>
+                            <!-- Línea superior recta del labio -->
+                            <a-cylinder radius="0.025" height="0.45" color="#000" rotation="0 0 90" position="0 0 0.02"></a-cylinder>
+                        </a-entity>
+                        
+                        <!-- Cachetes sonrojados para darle el toque feliz -->
+                        <a-sphere radius="0.08" color="#ff3366" position="-0.38 0.3 0.3" material="opacity: 0.7"></a-sphere>
+                        <a-sphere radius="0.08" color="#ff3366" position="0.38 0.3 0.3" material="opacity: 0.7"></a-sphere>
 
+                        <!-- Brazos -->
                         <a-entity id="hombro-izq" position="-1.2 0.8 0">
                             <a-cylinder radius="0.04" height="0.8" color="#111" position="-0.3 -0.2 0.3" rotation="20 0 40"></a-cylinder>
                             <a-sphere radius="0.12" color="#ffffff" position="-0.6 -0.4 0.6"></a-sphere> 
@@ -189,7 +204,7 @@
 
             </a-entity> 
 
-            <!-- Torta y Fuegos Bizarros -->
+            <!-- Elementos de Fiesta Bizarra -->
             <a-entity id="party-elements" visible="false">
                 <a-entity position="-2.5 1.5 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear">
                     <a-cylinder radius="0.7" height="0.3" color="#ff66b2"></a-cylinder>
@@ -207,32 +222,27 @@
     </a-scene>
 
     <script>
-        // SOLUCIÓN CÁMARA NEGRA: Se requiere interacción del usuario (botón) en iOS/Android modernos
-        async function iniciarExperienciaAR() {
+        // Inicio 100% automático de la cámara
+        async function autoIniciarCamara() {
             try {
                 const videoElement = document.getElementById('webcam-video');
-                // Intentar forzar la cámara trasera en todos los dispositivos
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: { ideal: "environment" } }, 
                     audio: false 
                 });
                 videoElement.srcObject = stream;
                 
-                // Ocultar el fondo negro y el botón
+                // Desvanecer el fondo negro automáticamente
                 document.getElementById('bg-container').style.opacity = '0';
                 setTimeout(() => document.getElementById('bg-container').style.display = 'none', 500);
-                document.getElementById('start-btn').style.display = 'none';
 
-                // Acomodar el holograma justo frente a donde mira la cámara al iniciar
                 const camara = document.querySelector('a-camera').object3D;
                 const ancla = document.getElementById('holograma-ancla');
                 
-                // Calcular la rotación del celular para poner el holograma enfrente
                 const rotY = camara.rotation.y;
-                const distZ = -5; // Distancia en metros
+                const distZ = -5;
                 const distX = 0;
                 
-                // Aplicar trigonometría básica para colocarlo a 5 metros frente a la vista inicial
                 ancla.position.set(
                     camara.position.x + distX * Math.cos(rotY) + distZ * Math.sin(rotY),
                     -0.5,
@@ -240,19 +250,16 @@
                 );
 
             } catch (error) { 
-                console.error("Error cámara:", error);
-                alert("Para ver el holograma, permite el acceso a la cámara y recarga la página.");
+                console.error("Permiso denegado o error de cámara:", error);
+                alert("Por favor, aceptá los permisos de la cámara al recargar la página para ver la Realidad Aumentada.");
             }
         }
 
-        // SOLUCIÓN CONTADOR CONGELADO: Cálculo basado en milisegundos universales
         function actualizarTemporizador() {
             const ahora = new Date();
-            // Fijar el objetivo: 17 de Octubre del año actual (Mes 9 en JavaScript porque empieza en 0)
             const anioActual = ahora.getFullYear();
             let objetivo = new Date(anioActual, 9, 17, 0, 0, 0); 
 
-            // Si hoy ya pasó el 17 de octubre a la noche, apuntar al año que viene
             if (ahora > new Date(anioActual, 9, 17, 23, 59, 59)) {
                 objetivo = new Date(anioActual + 1, 9, 17, 0, 0, 0);
             }
@@ -273,7 +280,6 @@
                 const minutos = Math.floor((milisegundosRestantes % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((milisegundosRestantes % (1000 * 60)) / 1000);
                 
-                // Formatear con ceros a la izquierda para que no baile el texto
                 const hF = horas.toString().padStart(2, '0');
                 const mF = minutos.toString().padStart(2, '0');
                 const sF = segundos.toString().padStart(2, '0');
@@ -282,10 +288,11 @@
             }
         }
 
-        // Arrancar el reloj independientemente de la cámara
+        // Ejecutar funciones apenas cargue la web sin clics
         window.addEventListener('load', () => {
-            actualizarTemporizador(); // Ejecutar inmediato
-            setInterval(actualizarTemporizador, 1000); // Repetir cada segundo
+            actualizarTemporizador(); 
+            setInterval(actualizarTemporizador, 1000); 
+            autoIniciarCamara();
         });
     </script>
 </body>
