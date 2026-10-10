@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Holograma Pizza Steve - 17 de Octubre</title>
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <style>
         body, html {
@@ -29,115 +30,179 @@
             box-shadow: 0 0 30px rgba(255, 204, 0, 0.9); text-transform: uppercase; display: none; pointer-events: auto;
         }
     </style>
+    
+    <script>
+        // SISTEMA DE FÍSICAS Y ANIMACIÓN PROCEDURAL (Rigging)
+        AFRAME.registerComponent('pizza-animator', {
+            tick: function (time) {
+                const t = time / 400; // Velocidad general de la animación
+                
+                // 1. Respiración y levitación del cuerpo base
+                const cuerpo = document.getElementById('cuerpo-steve');
+                if(cuerpo) {
+                    cuerpo.object3D.position.y = 1.2 + Math.sin(t) * 0.1;
+                    cuerpo.object3D.rotation.z = Math.sin(t * 0.5) * 0.05; // Balanceo de actitud (swag)
+                    cuerpo.object3D.rotation.y = Math.sin(t * 0.3) * 0.1; 
+                }
+
+                // 2. Físicas de brazos (Codos rebotando dinámicamente)
+                const codoIzq = document.getElementById('codo-izq');
+                const codoDer = document.getElementById('codo-der');
+                if(codoIzq && codoDer) {
+                    codoIzq.object3D.rotation.z = -0.8 + Math.sin(t * 1.5) * 0.15;
+                    codoDer.object3D.rotation.z = 0.8 - Math.sin(t * 1.5) * 0.15;
+                    // Rotación suave de los hombros para acompañar la respiración
+                    document.getElementById('hombro-izq').object3D.rotation.x = Math.sin(t) * 0.1;
+                    document.getElementById('hombro-der').object3D.rotation.x = Math.sin(t) * 0.1;
+                }
+
+                // 3. Físicas sueltas de piernas (Péndulo y flexión de rodillas)
+                const piernaIzq = document.getElementById('pierna-izq');
+                const rodillaIzq = document.getElementById('rodilla-izq');
+                const piernaDer = document.getElementById('pierna-der');
+                const rodillaDer = document.getElementById('rodilla-der');
+                
+                if(piernaIzq && rodillaIzq && piernaDer && rodillaDer) {
+                    // La pierna izquierda patea suavemente
+                    piernaIzq.object3D.rotation.x = Math.sin(t * 1.2) * 0.2;
+                    rodillaIzq.object3D.rotation.x = Math.abs(Math.sin(t * 1.2)) * 0.3; // La rodilla solo dobla hacia atrás
+
+                    // La pierna derecha alterna
+                    piernaDer.object3D.rotation.x = Math.sin(t * 1.2 + Math.PI) * 0.2;
+                    rodillaDer.object3D.rotation.x = Math.abs(Math.sin(t * 1.2 + Math.PI)) * 0.3;
+                }
+            }
+        });
+    </script>
 </head>
 <body>
 
+    <!-- Feed de cámara nativo -->
     <video id="webcam-video" autoplay playsinline muted></video>
 
     <div id="ui-overlay">
         <div class="hud-card" id="card-container">
-            <h1>⏳ Cuenta Regresiva: 17 de Octubre</h1>
+            <h1>⏳ Faltan para el 17 de Octubre</h1>
             <div id="timer">Calculando...</div>
         </div>
         <div class="party-banner" id="party-banner">
-            🎉 ¡LLEGÓ EL 17 DE OCTUBRE! ¡FIESTA TOTAL! 🎂
+            🎉 ¡LLEGÓ EL 17 DE OCTUBRE! ¡MODO BIZARRO! 🎂
         </div>
     </div>
 
-    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; logarithmicDepthBuffer: true;">
+    <!-- Escena AR -->
+    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true;">
         <a-camera position="0 1.5 0" look-controls="enabled: false"></a-camera>
-        <a-light type="ambient" color="#FFF" intensity="1.3"></a-light>
-        <a-light type="directional" position="2 4 3" intensity="1.8"></a-light>
+        <a-light type="ambient" color="#FFF" intensity="1.4"></a-light>
+        <a-light type="directional" position="1 4 2" intensity="1.5" castShadow="true"></a-light>
 
-        <!-- CONTENEDOR PRINCIPAL: Fijo en el espacio frente a la cámara -->
-        <a-entity position="0 1.8 -4.5">
+        <!-- CONTENEDOR ANCLADO EN EL ESPACIO -->
+        <a-entity position="0 0.5 -3.5">
 
-            <!-- PIZZA STEVE (Animación de flote dinámico) -->
-            <a-entity id="pizza-character" 
-                      animation="property: position; to: 0 0.3 0; dir: alternate; dur: 1200; loop: true; easing: easeInOutSine"
-                      animation__rot="property: rotation; from: 0 -10 0; to: 0 10 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+            <!-- PIZZA STEVE CON ANIMADOR ASIGNADO -->
+            <a-entity id="cuerpo-steve" pizza-animator>
 
-                <!-- Cuerpo: Porción de pizza invertida (Queso) -->
-                <a-cone radius-bottom="1.4" radius-top="0" height="2.8" color="#fca311" rotation="0 0 180" scale="1 1 0.15"></a-cone>
+                <!-- GEOMETRÍA DEL CUERPO (Mejor diseñada) -->
+                <!-- Porción principal (queso) -->
+                <a-cone radius-bottom="1.4" radius-top="0" height="2.6" color="#ffcc00" rotation="0 0 180" scale="1 1 0.2" material="roughness: 0.6"></a-cone>
                 
-                <!-- Borde de masa en la parte superior -->
-                <a-cylinder radius="1.45" height="0.35" color="#d68c45" position="0 1.4 0" scale="1 1 0.2"></a-cylinder>
+                <!-- Masa (crust abultado) en la parte superior -->
+                <a-cylinder radius="1.45" height="0.4" color="#d68c45" position="0 1.3 0" scale="1 1 0.25" material="roughness: 0.8"></a-cylinder>
 
-                <!-- Pepperonis -->
-                <a-cylinder radius="0.22" height="0.05" color="#cc0000" position="0 0.5 0.16" rotation="90 0 0"></a-cylinder>
-                <a-cylinder radius="0.18" height="0.05" color="#cc0000" position="-0.4 0.9 0.16" rotation="90 0 0"></a-cylinder>
-                <a-cylinder radius="0.2" height="0.05" color="#cc0000" position="0.3 1.1 0.16" rotation="90 0 0"></a-cylinder>
-                <a-cylinder radius="0.15" height="0.05" color="#cc0000" position="0 -0.4 0.11" rotation="90 0 0"></a-cylinder>
+                <!-- Pepperonis bien posicionados -->
+                <a-cylinder radius="0.22" height="0.05" color="#cc0000" position="0 0.5 0.22" rotation="90 0 0"></a-cylinder>
+                <a-cylinder radius="0.18" height="0.05" color="#cc0000" position="-0.4 0.9 0.22" rotation="90 0 0"></a-cylinder>
+                <a-cylinder radius="0.2" height="0.05" color="#cc0000" position="0.3 1.1 0.22" rotation="90 0 0"></a-cylinder>
+                <a-cylinder radius="0.15" height="0.05" color="#cc0000" position="0 -0.4 0.15" rotation="90 0 0"></a-cylinder>
 
-                <!-- Lentes de Sol Facheros -->
-                <a-entity position="0 0.8 0.18">
-                    <a-cylinder radius="0.25" height="0.1" color="#111" position="-0.3 0 0" rotation="90 0 0"></a-cylinder>
-                    <a-cylinder radius="0.25" height="0.1" color="#111" position="0.3 0 0" rotation="90 0 0"></a-cylinder>
-                    <a-box width="0.4" height="0.05" depth="0.1" color="#111" position="0 0 0"></a-box>
+                <!-- Lentes de Sol Estilo Pizza Steve -->
+                <a-entity position="0 0.7 0.26">
+                    <a-cylinder radius="0.3" height="0.1" color="#111" position="-0.35 0 0" rotation="90 0 0"></a-cylinder>
+                    <a-cylinder radius="0.3" height="0.1" color="#111" position="0.35 0 0" rotation="90 0 0"></a-cylinder>
+                    <a-box width="0.5" height="0.06" depth="0.1" color="#111" position="0 0 0"></a-box> <!-- Puente de los lentes -->
+                    <!-- Brillo de los lentes -->
+                    <a-plane width="0.1" height="0.2" color="#fff" position="-0.45 0.1 0.06" rotation="0 0 45" material="opacity: 0.5"></a-plane>
+                    <a-plane width="0.1" height="0.2" color="#fff" position="0.25 0.1 0.06" rotation="0 0 45" material="opacity: 0.5"></a-plane>
                 </a-entity>
 
-                <!-- Sonrisa canchera -->
-                <a-torus arc="150" radius="0.15" radius-tubular="0.02" color="#000" rotation="0 0 30" position="0 0.3 0.18"></a-torus>
+                <!-- Sonrisa sobradora -->
+                <a-torus arc="130" radius="0.15" radius-tubular="0.025" color="#000" rotation="0 0 40" position="0 0.3 0.26"></a-torus>
 
-                <!-- BRAZOS SOSTENIENDO EL CARTEL -->
+                <!-- CARTEL EN LAS MANOS (Solución al texto negro) -->
+                <!-- Lo emparentamos al cuerpo para que se mueva con él, no con la cámara -->
+                <a-entity id="letrero" position="0 -0.2 0.6">
+                    <!-- Marco negro -->
+                    <a-box width="2.2" height="0.6" depth="0.04" color="#000"></a-box>
+                    <!-- Fondo interior -->
+                    <a-box width="2.1" height="0.5" depth="0.06" color="#ffcc00"></a-box>
+                    <!-- Texto flotando apenas adelante para evitar bugs de renderizado -->
+                    <a-text value="17 DE OCTUBRE" color="#000" align="center" width="5.5" position="0 0 0.04" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"></a-text>
+                </a-entity>
+
+                <!-- RIG DE BRAZOS (Articulados) -->
                 <!-- Brazo Izquierdo -->
-                <a-entity position="-0.5 0 0">
-                    <a-cylinder radius="0.03" height="0.6" rotation="0 0 90" position="-0.3 0 0" color="#000"></a-cylinder>
-                    <a-cylinder radius="0.03" height="0.8" rotation="90 0 0" position="-0.6 0 0.4" color="#000"></a-cylinder>
-                    <!-- Guante blanco sosteniendo la esquina -->
-                    <a-sphere radius="0.08" color="#fff" position="-0.6 0 0.8"></a-sphere> 
+                <a-entity id="hombro-izq" position="-0.8 0.1 0">
+                    <a-cylinder radius="0.04" height="0.5" color="#000" position="-0.25 0 0.1" rotation="0 0 70"></a-cylinder> <!-- Bíceps -->
+                    <a-entity id="codo-izq" position="-0.5 0 0.2">
+                        <a-cylinder radius="0.04" height="0.5" color="#000" position="0.1 -0.2 0.2" rotation="30 0 -40"></a-cylinder> <!-- Antebrazo hacia el cartel -->
+                        <a-sphere radius="0.09" color="#fff" position="0.25 -0.35 0.4"></a-sphere> <!-- Guante agarrando el cartel -->
+                    </a-entity>
                 </a-entity>
+
                 <!-- Brazo Derecho -->
-                <a-entity position="0.5 0 0">
-                    <a-cylinder radius="0.03" height="0.6" rotation="0 0 90" position="0.3 0 0" color="#000"></a-cylinder>
-                    <a-cylinder radius="0.03" height="0.8" rotation="90 0 0" position="0.6 0 0.4" color="#000"></a-cylinder>
-                    <!-- Guante blanco sosteniendo la esquina -->
-                    <a-sphere radius="0.08" color="#fff" position="0.6 0 0.8"></a-sphere>
+                <a-entity id="hombro-der" position="0.8 0.1 0">
+                    <a-cylinder radius="0.04" height="0.5" color="#000" position="0.25 0 0.1" rotation="0 0 -70"></a-cylinder>
+                    <a-entity id="codo-der" position="0.5 0 0.2">
+                        <a-cylinder radius="0.04" height="0.5" color="#000" position="-0.1 -0.2 0.2" rotation="30 0 40"></a-cylinder>
+                        <a-sphere radius="0.09" color="#fff" position="-0.25 -0.35 0.4"></a-sphere>
+                    </a-entity>
                 </a-entity>
 
-                <!-- CARTEL EN LAS MANOS -->
-                <a-entity position="0 0 0.82">
-                    <a-box width="1.6" height="0.5" depth="0.05" color="#000" position="0 0 0" material="shader: flat">
-                        <a-box width="1.5" height="0.4" depth="0.06" color="#ffcc00" position="0 0 0" material="shader: flat"></a-box>
-                    </a-box>
-                    <a-text value="17 DE OCTUBRE" align="center" color="#000" scale="1.1 1.1 1.1" font="exo2bold" position="0 0 0.04"></a-text>
-                </a-entity>
-
-                <!-- PIERNAS Y ZAPATILLAS (Con animación de balanceo suelto) -->
-                <a-entity animation="property: rotation; from: -5 0 0; to: 5 0 0; dir: alternate; dur: 800; loop: true">
-                    <!-- Pierna Izquierda -->
-                    <a-entity position="-0.2 -1.2 0">
-                        <a-cylinder radius="0.03" height="1" color="#000" position="0 -0.5 0"></a-cylinder>
-                        <a-entity position="0 -1 0.1">
-                            <a-box width="0.15" height="0.12" depth="0.3" color="#e63946"></a-box> <!-- Zapatilla -->
-                            <a-box width="0.16" height="0.04" depth="0.32" color="#fff" position="0 -0.06 0"></a-box> <!-- Suela blanca -->
+                <!-- RIG DE PIERNAS (Articuladas) -->
+                <!-- Cadera y Pierna Izquierda -->
+                <a-entity id="pierna-izq" position="-0.3 -1.3 0">
+                    <a-cylinder radius="0.04" height="0.6" color="#000" position="0 -0.3 0"></a-cylinder> <!-- Muslo -->
+                    <a-entity id="rodilla-izq" position="0 -0.6 0">
+                        <a-cylinder radius="0.04" height="0.6" color="#000" position="0 -0.3 0"></a-cylinder> <!-- Pantorrilla -->
+                        <!-- Zapatilla Alta -->
+                        <a-entity position="0 -0.65 0.15">
+                            <a-box width="0.18" height="0.15" depth="0.35" color="#e63946"></a-box> <!-- Roja -->
+                            <a-box width="0.2" height="0.05" depth="0.37" color="#fff" position="0 -0.1 0"></a-box> <!-- Suela blanca -->
+                            <a-box width="0.18" height="0.08" depth="0.1" color="#fff" position="0 0.05 0.13"></a-box> <!-- Punta blanca -->
                         </a-entity>
                     </a-entity>
-                    <!-- Pierna Derecha -->
-                    <a-entity position="0.2 -1.2 0">
-                        <a-cylinder radius="0.03" height="1" color="#000" position="0 -0.5 0"></a-cylinder>
-                        <a-entity position="0 -1 0.1">
-                            <a-box width="0.15" height="0.12" depth="0.3" color="#e63946"></a-box>
-                            <a-box width="0.16" height="0.04" depth="0.32" color="#fff" position="0 -0.06 0"></a-box>
+                </a-entity>
+
+                <!-- Cadera y Pierna Derecha -->
+                <a-entity id="pierna-der" position="0.3 -1.3 0">
+                    <a-cylinder radius="0.04" height="0.6" color="#000" position="0 -0.3 0"></a-cylinder>
+                    <a-entity id="rodilla-der" position="0 -0.6 0">
+                        <a-cylinder radius="0.04" height="0.6" color="#000" position="0 -0.3 0"></a-cylinder>
+                        <!-- Zapatilla Alta -->
+                        <a-entity position="0 -0.65 0.15">
+                            <a-box width="0.18" height="0.15" depth="0.35" color="#e63946"></a-box>
+                            <a-box width="0.2" height="0.05" depth="0.37" color="#fff" position="0 -0.1 0"></a-box>
+                            <a-box width="0.18" height="0.08" depth="0.1" color="#fff" position="0 0.05 0.13"></a-box>
                         </a-entity>
                     </a-entity>
                 </a-entity>
 
             </a-entity>
 
-            <!-- ELEMENTOS DE FIESTA: TORTA Y FUEGOS (Aparecen el 17) -->
+            <!-- ELEMENTOS MODO BIZARRO (Torta y Fuegos - Ocultos por defecto) -->
             <a-entity id="party-elements" visible="false">
-                <a-entity position="-1.8 -0.5 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
-                    <a-cylinder radius="0.5" height="0.3" color="#ff66b2" position="0 0 0"></a-cylinder>
-                    <a-cylinder radius="0.52" height="0.1" color="#ffffff" position="0 0.15 0"></a-cylinder>
-                    <a-cylinder radius="0.05" height="0.3" color="#ffff00" position="0 0.35 0">
-                        <a-sphere radius="0.08" color="#ff3300" position="0 0.2 0" animation="property: scale; to: 1.5 1.5 1.5; dir: alternate; dur: 150; loop: true"></a-sphere>
+                <a-entity position="-2 0 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 2000; easing: linear">
+                    <a-cylinder radius="0.6" height="0.3" color="#ff66b2" position="0 0 0"></a-cylinder>
+                    <a-cylinder radius="0.62" height="0.1" color="#ffffff" position="0 0.15 0"></a-cylinder>
+                    <a-cylinder radius="0.05" height="0.4" color="#ffff00" position="0 0.4 0">
+                        <a-sphere radius="0.08" color="#ff3300" position="0 0.25 0" animation="property: scale; to: 1.6 1.6 1.6; dir: alternate; dur: 100; loop: true"></a-sphere>
                     </a-cylinder>
                 </a-entity>
 
-                <a-sphere radius="0.08" color="#ff0055" position="-1.5 3 0" animation="property: position; to: -1.5 5 0; dir: alternate; dur: 600; loop: true"></a-sphere>
-                <a-sphere radius="0.08" color="#00ffcc" position="1.5 2.5 0" animation="property: position; to: 1.5 4.5 0; dir: alternate; dur: 450; loop: true"></a-sphere>
-                <a-sphere radius="0.08" color="#ffcc00" position="0 4 -1" animation="property: position; to: 0 6 -1; dir: alternate; dur: 550; loop: true"></a-sphere>
+                <!-- Partículas de luces -->
+                <a-sphere radius="0.1" color="#ff0055" position="-1.5 3 0" animation="property: position; to: -1.5 6 0; dir: alternate; dur: 500; loop: true"></a-sphere>
+                <a-sphere radius="0.1" color="#00ffcc" position="1.5 2.5 0" animation="property: position; to: 1.5 5.5 0; dir: alternate; dur: 400; loop: true"></a-sphere>
+                <a-sphere radius="0.1" color="#ffcc00" position="0 4 -2" animation="property: position; to: 0 7 -2; dir: alternate; dur: 450; loop: true"></a-sphere>
             </a-entity>
 
         </a-entity>
@@ -149,7 +214,7 @@
                 const videoElement = document.getElementById('webcam-video');
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
                 videoElement.srcObject = stream;
-            } catch (error) { console.error("Error cámara:", error); }
+            } catch (error) { console.error("Error al iniciar cámara:", error); }
         }
 
         function actualizarSistema() {
@@ -168,9 +233,11 @@
                 document.getElementById('party-banner').style.display = 'block';
                 document.getElementById('party-elements').setAttribute('visible', 'true');
 
-                // Animación de giro loco de festejo
-                const pizza = document.getElementById('pizza-character');
-                pizza.setAttribute('animation__rot', 'property: rotation; to: 0 360 0; loop: true; dur: 800; easing: linear');
+                // Si es el 17, Steve se descontrola girando
+                const steve = document.getElementById('cuerpo-steve');
+                if(!steve.hasAttribute('animation__rot')) {
+                    steve.setAttribute('animation__rot', 'property: rotation; to: 0 360 0; loop: true; dur: 1000; easing: linear');
+                }
             } else {
                 const diferencia = objetivo - ahora;
                 const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
